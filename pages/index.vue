@@ -1,10 +1,61 @@
 <template>
   <v-row>
-    <v-col class="text-center">
-      <all-channels-bar-chart :chart-data="chart_data"></all-channels-bar-chart>
-
-      <v-textarea v-model="select_query" label="query"> </v-textarea>
-      <v-btn @click="fetch_data">run</v-btn>
+    <v-col class="text-center" cols="12">
+      <all-channels-bar-chart :chart-data="data_barchart"></all-channels-bar-chart>
+    </v-col>
+    <v-col class="text-center" cols="3">
+      <all-channel-doughnut-chart :chart-data="data_doughnut"></all-channel-doughnut-chart>
+    </v-col>
+    <v-col class="text-center" cols="3">
+      Top 10 most messages
+      <v-simple-table dense>
+        <thead>
+          <tr>
+            <th class="text-right">Messages</th>
+            <th class="text-left">User</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="user in top10_message" :key="`t10m_${user.user}`">
+            <td class="text-right">{{ user.message_count }}</td>
+            <td class="text-left">{{ user.username }}</td>
+          </tr>
+        </tbody>
+      </v-simple-table>
+    </v-col>
+    <v-col class="text-center" cols="3">
+      Top 10 most messages with emotes
+      <v-simple-table dense>
+        <thead>
+          <tr>
+            <th class="text-right">Messages</th>
+            <th class="text-left">User</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="user in top10_emotes" :key="`t10m_${user.user}`">
+            <td class="text-right">{{ user.emote_count }}</td>
+            <td class="text-left">{{ user.username }}</td>
+          </tr>
+        </tbody>
+      </v-simple-table>
+    </v-col>
+    <v-col class="text-center" cols="3">
+      Top 10 most reacted to
+      <v-simple-table dense>
+        <thead>
+          <tr>
+            <th class="text-right">Messages</th>
+            <th class="text-left">User</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="user in top10_reacted" :key="`t10m_${user.user}`">
+            <td class="text-right">{{ user.reaction_count }}</td>
+            <td class="text-left">{{ user.username }}</td>
+          </tr>
+        </tbody>
+      </v-simple-table>
     </v-col>
   </v-row>
 </template>
@@ -12,25 +63,32 @@
 
 
 <script>
+import AllChannelDoughnutChart from "~/components/AllChannelDoughnutChart.vue";
 import AllChannelsBarChart from "~/components/AllChannelsBarChart.vue";
 export default {
-  components: { AllChannelsBarChart },
+  components: { AllChannelsBarChart, AllChannelDoughnutChart },
   data: () => ({
-    chart_data: {},
+    data_barchart: {},
+    data_doughnut: {},
+    message_bar: {},
     message_data: [],
-    select_query: `
-      select * 
-      from channel_totals 
-      where timestamp between '2020-02-01' and '2020-03-01'
-      order by timestamp, channel`,
+    top10_message: [],
+    top10_emotes: [],
+    top10_reacted: [],
+    start_date: "2020-01-01",
+    end_date: "2020-03-01",
   }),
   methods: {
     fetch_data: async function () {
-      let message_totals = await this.$dbworker.db.query(this.select_query);
+      let message_totals = await this.$dbworker.db.query(`
+          select timestamp, channel, sum(message_count) as message_count, sum(emote_count) as emote_count, sum(reaction_count) as reaction_count
+          from channel_totals 
+          where timestamp between '${this.start_date}' and '${this.end_date}'
+          group by timestamp, channel
+          order by timestamp, channel
+    `);
 
-      let channel_info_array = await this.$dbworker.db.query(
-        `select * from channel_info`
-      );
+      let channel_info_array = await this.$dbworker.db.query(`select * from channel_info`);
 
       let channel_info = {};
 
@@ -38,38 +96,84 @@ export default {
         channel_info[channel_info_array[i].channel_id] = channel_info_array[i];
       }
 
-      let labels = [];
-      let dataset_data = {};
+      let labels_bar = [];
+      let dataset_bar = {};
 
       let last_timestamp = "";
       message_totals.forEach((element) => {
         if (element.timestamp != last_timestamp) {
           last_timestamp = element.timestamp;
-          labels.push(element.timestamp);
+          labels_bar.push(element.timestamp);
         }
-        if (!(element.channel in dataset_data))
-          dataset_data[element.channel] = [];
-        dataset_data[element.channel].push(element.message_count);
+        if (!(element.channel in dataset_bar)) dataset_bar[element.channel] = [];
+        dataset_bar[element.channel].push(element.message_count);
       });
 
-      let chart_data = {
-        labels: labels,
+      let data_barchart = {
+        labels: labels_bar,
         datasets: [],
       };
 
-      for (const [key, value] of Object.entries(dataset_data)) {
-        chart_data.datasets.push({
+      let labels_doughtnut = [];
+      let dateset_doughnut_data = [];
+      let dateset_doughnut_colors = [];
+
+      for (const [key, value] of Object.entries(dataset_bar)) {
+        data_barchart.datasets.push({
           label: channel_info[key]["channel_name"],
           backgroundColor: channel_info[key]["channel_color"],
           data: value,
           categoryPercentage: 1,
           barPercentage: 1,
         });
+
+        labels_doughtnut.push(channel_info[key]["channel_name"]);
+        dateset_doughnut_data.push(value.reduce((a, b) => a + b, 0));
+        dateset_doughnut_colors.push(channel_info[key]["channel_color"]);
       }
 
-      this.chart_data = chart_data;
+      let data_doughnut = {
+        labels: labels_doughtnut,
+        datasets: [{ data: dateset_doughnut_data, backgroundColor: dateset_doughnut_colors }],
+      };
 
-      this.message_data = message_totals;
+      console.log(data_doughnut);
+      this.data_barchart = data_barchart;
+      this.data_doughnut = data_doughnut;
+
+      let top10_message = await this.$dbworker.db.query(`
+          select user, username, sum(message_count) as message_count
+          from channel_totals  as ct 
+          left join user_info as ui on ui.user_id = ct.user
+          where timestamp between '${this.start_date}' and '${this.end_date}'
+          group by user, username
+          order by sum(message_count) desc
+          limit 10
+    `);
+
+      let top10_emotes = await this.$dbworker.db.query(`
+          select user, username, sum(emote_count) as emote_count
+          from channel_totals  as ct 
+          left join user_info as ui on ui.user_id = ct.user
+          where timestamp between '${this.start_date}' and '${this.end_date}'
+          group by user, username
+          order by sum(emote_count) desc
+          limit 10
+    `);
+
+      let top10_reacted = await this.$dbworker.db.query(`
+          select user, username, sum(reaction_count) as reaction_count
+          from channel_totals  as ct 
+          left join user_info as ui on ui.user_id = ct.user
+          where timestamp between '${this.start_date}' and '${this.end_date}'
+          group by user, username
+          order by sum(reaction_count) desc
+          limit 10
+    `);
+
+      this.top10_message = top10_message;
+      this.top10_emotes = top10_emotes;
+      this.top10_reacted = top10_reacted;
     },
   },
 

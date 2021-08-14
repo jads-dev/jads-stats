@@ -4,7 +4,7 @@ import sqlite3
 
 
 from collections import defaultdict
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 
 
 import discord
@@ -37,7 +37,7 @@ class Bot(discord.Client):
             if channel.category_id != 360768845662781440:  # main category
                 continue
 
-            print(channel)
+            print(channel.id, channel)
 
             cursor.execute("select max(timestamp) from channel_totals where channel = ?", (channel.id,))
             result = cursor.fetchone()[0]
@@ -50,23 +50,50 @@ class Bot(discord.Client):
                 cur_time_end = cur_time + timedelta(days=1)
 
                 print(f"Searching between {cur_time} and {cur_time_end}")
-                messages = 0
-                emotes = 0
-                reactions = 0
-                async for message in channel.history(after=cur_time, before=cur_time_end, limit=None):
-                    messages += 1
-                    if emote_pattern.search(message.content):
-                        emotes += 1
-                    if len(message.reactions):
-                        reactions += 1
 
-                time_str = cur_time.isoformat()
-                cursor.execute(
-                    """INSERT INTO channel_totals (timestamp, channel, message_count, emote_count, reaction_count)
-                                VALUES (?,?,?,?,?)
-                            """,
-                    (time_str, channel.id, messages, emotes, reactions),
+                user_data = defaultdict(
+                    lambda: {
+                        "messages": 0,
+                        "emotes": 0,
+                        "reactions": 0,
+                    }
                 )
+
+                usernames = {}
+
+                async for message in channel.history(after=cur_time, before=cur_time_end, limit=None):
+                    aid = message.author.id
+                    user_data[aid]["messages"] += 1
+                    if emote_pattern.search(message.content):
+                        user_data[aid]["emotes"] += 1
+                    if len(message.reactions):
+                        user_data[aid]["reactions"] += 1
+
+                    usernames[aid] = f"{message.author.name}#{message.author.discriminator}"
+
+                time_str = cur_time.date().isoformat()
+
+                user_data_flat = [
+                    (time_str, channel.id, key, user_data[key]["messages"], user_data[key]["emotes"], user_data[key]["reactions"]) for key in user_data
+                ]
+                cursor.executemany(
+                    """INSERT INTO channel_totals (timestamp, channel, user, message_count, emote_count, reaction_count)
+                       VALUES (?,?,?,?,?,?)
+                            """,
+                    user_data_flat,
+                )
+
+                usernames_flat = [(key, usernames[key]) for key in usernames]
+
+                cursor.executemany(
+                    """insert into user_info (user_id, username)
+                       VALUES (?,?)
+                       ON CONFLICT(user_id) 
+                       DO UPDATE SET username=excluded.username;
+                            """,
+                    usernames_flat,
+                )
+
                 con.commit()
 
                 cur_time = cur_time_end
