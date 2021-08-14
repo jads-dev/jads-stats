@@ -1,6 +1,24 @@
 <template>
   <v-row>
     <v-col class="text-center" cols="12">
+      <div>
+        <v-btn x-small @click="change_date('start', -30)"> -1 month </v-btn>
+        <v-btn x-small @click="change_date('start', -7)"> -1 week </v-btn>
+        <v-btn x-small @click="change_date('start', -1)"> -1 day </v-btn> Start: {{ start_date }}
+        <v-btn x-small @click="change_date('start', 1)"> +1 day </v-btn>
+        <v-btn x-small @click="change_date('start', 7)"> +1 week </v-btn>
+        <v-btn x-small @click="change_date('start', 30)"> +1 month </v-btn>
+      </div>
+      <div>
+        <v-btn x-small @click="change_date('end', -30)"> -1 month </v-btn>
+        <v-btn x-small @click="change_date('end', -7)"> -1 week </v-btn>
+        <v-btn x-small @click="change_date('end', -1)"> -1 day </v-btn> End: {{ end_date }}
+        <v-btn x-small @click="change_date('end', 1)"> +1 day </v-btn>
+        <v-btn x-small @click="change_date('end', 7)"> +1 week </v-btn>
+        <v-btn x-small @click="change_date('end', 30)"> +1 month </v-btn>
+      </div>
+    </v-col>
+    <v-col class="text-center" cols="12">
       <all-channels-bar-chart :chart-data="data_barchart"></all-channels-bar-chart>
     </v-col>
     <v-col class="text-center" cols="3">
@@ -65,6 +83,16 @@
 <script>
 import AllChannelDoughnutChart from "~/components/AllChannelDoughnutChart.vue";
 import AllChannelsBarChart from "~/components/AllChannelsBarChart.vue";
+
+function parseDate(date) {
+  const parsed = Date.parse(date);
+  if (!isNaN(parsed)) {
+    return parsed;
+  }
+
+  return Date.parse(date.replace(/-/g, "/").replace(/[a-z]+/gi, " "));
+}
+
 export default {
   components: { AllChannelsBarChart, AllChannelDoughnutChart },
   data: () => ({
@@ -175,10 +203,36 @@ export default {
       this.top10_emotes = top10_emotes;
       this.top10_reacted = top10_reacted;
     },
+
+    change_date: function (date_type, amount) {
+      let date_str = "";
+      if (date_type == "start") date_str = this.start_date.replaceAll("-", "/");
+      else date_str = this.end_date.replaceAll("-", "/");
+
+      let new_date = new Date(date_str);
+
+      if (amount >= 30) new_date.setMonth(new_date.getMonth() + 1);
+      else if (amount <= -30) new_date.setMonth(new_date.getMonth() - 1);
+      else new_date.setDate(new_date.getDate() + amount);
+
+      let new_date_str = new_date.toISOString().slice(0, 10);
+
+      if (date_type == "start") this.start_date = new_date_str;
+      else this.end_date = new_date_str;
+    },
   },
 
   mounted: async function () {
     this.fetch_data();
+  },
+
+  watch: {
+    start_date: function (n, old) {
+      this.fetch_data();
+    },
+    end_date: function (n, old) {
+      this.fetch_data();
+    },
   },
 };
 </script>
