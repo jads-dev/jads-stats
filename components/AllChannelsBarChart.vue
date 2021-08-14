@@ -13,8 +13,6 @@ export default {
         xAxes: [
           {
             stacked: true,
-            categoryPercentage: 0.5,
-            barPercentage: 1,
           },
         ],
         yAxes: [

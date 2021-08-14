@@ -38,7 +38,14 @@ class Bot(discord.Client):
                 continue
 
             print(channel)
-            cur_time = date_start
+
+            cursor.execute("select max(timestamp) from channel_totals where channel = ?", (channel.id,))
+            result = cursor.fetchone()[0]
+            if result:
+                cur_time = datetime.fromisoformat(result)
+                cur_time = cur_time + timedelta(days=1)
+            else:
+                cur_time = date_start
             while cur_time < date_limit:
                 cur_time_end = cur_time + timedelta(days=1)
 
@@ -63,7 +70,7 @@ class Bot(discord.Client):
                 con.commit()
 
                 cur_time = cur_time_end
-                
+
         con.close()
         print("Done")
 

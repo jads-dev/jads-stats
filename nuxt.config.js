@@ -29,7 +29,6 @@ export default {
   axios: {},
 
   vuetify: {
-    customVariables: ["~/assets/variables.scss"],
     theme: {
       dark: true,
       themes: {
