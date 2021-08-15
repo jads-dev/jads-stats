@@ -104,7 +104,7 @@ export default {
     top10_emotes: [],
     top10_reacted: [],
     start_date: "2020-01-01",
-    end_date: "2020-03-01",
+    end_date: "2022-03-01",
   }),
   methods: {
     fetch_data: async function () {
