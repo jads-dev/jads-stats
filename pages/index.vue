@@ -21,10 +21,10 @@
     <v-col class="text-center" cols="12">
       <all-channels-bar-chart :chart-data="data_barchart"></all-channels-bar-chart>
     </v-col>
-    <v-col class="text-center" cols="3">
+    <v-col class="text-center" cols="12" md="3">
       <all-channel-doughnut-chart :chart-data="data_doughnut"></all-channel-doughnut-chart>
     </v-col>
-    <v-col class="text-center" cols="3">
+    <v-col class="text-center" cols="12" md="3">
       Top 10 most messages
       <v-simple-table dense>
         <thead>
@@ -41,7 +41,7 @@
         </tbody>
       </v-simple-table>
     </v-col>
-    <v-col class="text-center" cols="3">
+    <v-col class="text-center" cols="12" md="3">
       Top 10 most messages with emotes
       <v-simple-table dense>
         <thead>
@@ -58,7 +58,7 @@
         </tbody>
       </v-simple-table>
     </v-col>
-    <v-col class="text-center" cols="3">
+    <v-col class="text-center" cols="12" md="3">
       Top 10 most reacted to
       <v-simple-table dense>
         <thead>
