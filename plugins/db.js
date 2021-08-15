@@ -8,7 +8,7 @@ export default async ({ app, store }, inject) => {
         from: "inline",
         config: {
           serverMode: "full",
-          url: "/jads-stats/stats.db",
+          url: "./stats.db",
           requestChunkSize: 4096
         }
       }
