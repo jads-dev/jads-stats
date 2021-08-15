@@ -45,5 +45,8 @@ export default {
     }
   },
 
-  build: {}
+  build: {},
+  router: {
+    base: '/jads-stats/',
+  },
 };
