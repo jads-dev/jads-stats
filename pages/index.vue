@@ -112,8 +112,8 @@ export default {
     top10_reacted: [],
     start_date_menu: false,
     end_date_menu: false,
-    start_date: "2021-07-01",
-    end_date: "2021-08-01",
+    default_start_date: "2021-07-01",
+    default_end_date: "2021-08-01",
     min_date: "",
     max_date: "",
     is_loading: false,
@@ -186,13 +186,12 @@ export default {
         datasets: [{ data: dateset_doughnut_data, backgroundColor: dateset_doughnut_colors }],
       };
 
-      console.log(data_doughnut);
       this.data_barchart = data_barchart;
       this.data_doughnut = data_doughnut;
 
       let top10_message = await this.$dbworker.db.query(`
           select user, username, sum(message_count) as message_count
-          from channel_totals  as ct 
+          from channel_totals_breakdown as ct 
           left join user_info as ui on ui.user_id = ct.user
           where timestamp between '${this.start_date}' and '${this.end_date}'
           group by user, username
@@ -202,7 +201,7 @@ export default {
 
       let top10_emotes = await this.$dbworker.db.query(`
           select user, username, sum(emote_count) as emote_count
-          from channel_totals  as ct 
+          from channel_totals_breakdown as ct 
           left join user_info as ui on ui.user_id = ct.user
           where timestamp between '${this.start_date}' and '${this.end_date}'
           group by user, username
@@ -212,7 +211,7 @@ export default {
 
       let top10_reacted = await this.$dbworker.db.query(`
           select user, username, sum(reaction_count) as reaction_count
-          from channel_totals  as ct 
+          from channel_totals_breakdown as ct 
           left join user_info as ui on ui.user_id = ct.user
           where timestamp between '${this.start_date}' and '${this.end_date}'
           group by user, username
@@ -224,6 +223,35 @@ export default {
       this.top10_emotes = top10_emotes;
       this.top10_reacted = top10_reacted;
       this.is_loading = false;
+    },
+  },
+
+  computed: {
+    start_date: {
+      get() {
+        return this.$route.query.start_date || this.default_start_date;
+      },
+      set(value) {
+        this.$router.replace({
+          query: {
+            ...this.$route.query,
+            start_date: value,
+          },
+        });
+      },
+    },
+    end_date: {
+      get() {
+        return this.$route.query.end_date || this.default_end_date;
+      },
+      set(value) {
+        this.$router.replace({
+          query: {
+            ...this.$route.query,
+            end_date: value,
+          },
+        });
+      },
     },
   },
 

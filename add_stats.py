@@ -105,7 +105,7 @@ class Bot(discord.Client):
                 ]
 
                 cursor.executemany(
-                    """INSERT OR IGNORE INTO channel_totals (timestamp, channel, user, message_count, emote_count, reaction_count)
+                    """INSERT OR IGNORE INTO channel_totals_breakdown (timestamp, channel, user, message_count, emote_count, reaction_count)
                        VALUES (?,?,?,?,?,?)
                             """,
                     user_data_flat,
@@ -118,7 +118,7 @@ class Bot(discord.Client):
                 ]
 
                 cursor.executemany(
-                    """INSERT OR IGNORE INTO emote_totals (timestamp, channel, user, emote, amount)
+                    """INSERT OR IGNORE INTO emote_totals_breakdown (timestamp, channel, user, emote, amount)
                        VALUES (?,?,?,?,?)
                             """,
                     emote_data_flat,

@@ -57,8 +57,8 @@ export default {
     top10_reacted: [],
     start_date_menu: false,
     end_date_menu: false,
-    start_date: "2020-02-01",
-    end_date: "2020-03-01",
+    default_start_date: "2021-07-01",
+    default_end_date: "2021-08-01",
     min_date: "",
     max_date: "",
     is_loading: false,
@@ -68,19 +68,22 @@ export default {
       this.is_loading = true;
 
       let message_totals = await this.$dbworker.db.query(`
-            with top100 as (
+            with t as (
                 select emote,  sum(amount) as amount, ROW_NUMBER() over (order by sum(amount) desc ) as sort
                 from emote_totals 
-                where timestamp between '2020-02-01' and '2020-03-01'
+                where timestamp between '${this.start_date}' and '${this.end_date}'
                 group by emote
                 order by sum(amount) desc
                 limit 50
+            ), et as (
+            select *
+            from emote_totals
+            where timestamp between '${this.start_date}' and '${this.end_date}'
             )
 
-            select t.emote, et.channel, sum(et.amount) as amount
-            from top100 as t
-            left join emote_totals as et on t.emote = et.emote
-            where et.timestamp between '2020-02-01' and '2020-03-01'
+            select t.emote, c.channel_id as channel, ifnull(sum(et.amount),0) as amount
+            from channel_info as c, t
+            left join et on t.emote = et.emote and et.channel = c.channel_id
             group by t.emote, et.channel
             order by t.sort, t.emote, et.channel
     `);
@@ -129,6 +132,35 @@ export default {
       this.data_barchart = data_barchart;
 
       this.is_loading = false;
+    },
+  },
+
+  computed: {
+    start_date: {
+      get() {
+        return this.$route.query.start_date || this.default_start_date;
+      },
+      set(value) {
+        this.$router.replace({
+          query: {
+            ...this.$route.query,
+            start_date: value,
+          },
+        });
+      },
+    },
+    end_date: {
+      get() {
+        return this.$route.query.end_date || this.default_end_date;
+      },
+      set(value) {
+        this.$router.replace({
+          query: {
+            ...this.$route.query,
+            end_date: value,
+          },
+        });
+      },
     },
   },
 

@@ -34,7 +34,7 @@ export default {
         xAxis.ticks.forEach((value, index) => {
           var x = xAxis.getPixelForTick(index);
           var image = new Image();
-          console.log(this.chartData);
+        //   console.log(this.chartData);
           //   (image.src = images[index]), ctx.drawImage(image, x - 12, yAxis.bottom + 10);
         });
       },
