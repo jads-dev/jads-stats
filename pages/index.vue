@@ -18,15 +18,7 @@
         </v-menu>
         <v-menu v-model="end_date_menu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition" offset-y min-width="auto">
           <template v-slot:activator="{ on, attrs }">
-            <v-text-field
-              style="max-width: 150px"
-              v-model="end_date"
-              label="To"
-              prepend-icon="mdi-calendar"
-              readonly
-              v-bind="attrs"
-              v-on="on"
-            ></v-text-field>
+            <v-text-field style="max-width: 150px" v-model="end_date" label="To" prepend-icon="mdi-calendar" readonly v-bind="attrs" v-on="on"></v-text-field>
           </template>
           <v-date-picker v-model="end_date" @input="end_date_menu = false"></v-date-picker>
         </v-menu>
@@ -131,11 +123,18 @@ export default {
       this.is_loading = true;
 
       let message_totals = await this.$dbworker.db.query(`
-          select timestamp, channel, sum(message_count) as message_count, sum(emote_count) as emote_count, sum(reaction_count) as reaction_count
-          from channel_totals 
-          where timestamp between '${this.start_date}' and '${this.end_date}'
-          group by timestamp, channel
-          order by timestamp, channel
+          with c as (
+            select distinct timestamp, channel_id
+            from channel_totals, channel_info
+            where timestamp between '${this.start_date}' and '${this.end_date}'
+          )
+
+          select ct.timestamp, channel, sum(message_count) as message_count, sum(emote_count) as emote_count, sum(reaction_count) as reaction_count
+          from c
+          left join channel_totals as ct on ct.timestamp = c.timestamp and ct.channel = c.channel_id 
+          where ct.timestamp between '${this.start_date}' and '${this.end_date}'
+          group by ct.timestamp, channel
+          order by ct.timestamp, channel
     `);
 
       let channel_info_array = await this.$dbworker.db.query(`select * from channel_info`);
@@ -225,23 +224,6 @@ export default {
       this.top10_emotes = top10_emotes;
       this.top10_reacted = top10_reacted;
       this.is_loading = false;
-    },
-
-    change_date: function (date_type, amount) {
-      let date_str = "";
-      if (date_type == "start") date_str = this.start_date.replaceAll("-", "/");
-      else date_str = this.end_date.replaceAll("-", "/");
-
-      let new_date = new Date(date_str);
-
-      if (amount >= 30) new_date.setMonth(new_date.getMonth() + 1);
-      else if (amount <= -30) new_date.setMonth(new_date.getMonth() - 1);
-      else new_date.setDate(new_date.getDate() + amount);
-
-      let new_date_str = new_date.toISOString().slice(0, 10);
-
-      if (date_type == "start") this.start_date = new_date_str;
-      else this.end_date = new_date_str;
     },
   },
 
