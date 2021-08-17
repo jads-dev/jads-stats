@@ -191,7 +191,7 @@ export default {
 
       let top10_message = await this.$dbworker.db.query(`
           select user, username, sum(message_count) as message_count
-          from channel_totals_breakdown as ct 
+          from channel_user_totals as ct 
           left join user_info as ui on ui.user_id = ct.user
           where timestamp between '${this.start_date}' and '${this.end_date}'
           group by user, username
@@ -201,7 +201,7 @@ export default {
 
       let top10_emotes = await this.$dbworker.db.query(`
           select user, username, sum(emote_count) as emote_count
-          from channel_totals_breakdown as ct 
+          from channel_user_totals as ct 
           left join user_info as ui on ui.user_id = ct.user
           where timestamp between '${this.start_date}' and '${this.end_date}'
           group by user, username
@@ -211,7 +211,7 @@ export default {
 
       let top10_reacted = await this.$dbworker.db.query(`
           select user, username, sum(reaction_count) as reaction_count
-          from channel_totals_breakdown as ct 
+          from channel_user_totals as ct 
           left join user_info as ui on ui.user_id = ct.user
           where timestamp between '${this.start_date}' and '${this.end_date}'
           group by user, username
