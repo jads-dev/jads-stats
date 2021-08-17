@@ -147,6 +147,50 @@ class Bot(discord.Client):
 
                 cur_time = cur_time_end
 
+        # these tables will use less data (faster) when querying from the browser
+        cursor.execute(
+            """
+            drop table if EXISTS channel_totals;
+            create table channel_totals as
+            select ct.timestamp, channel, sum(message_count) as message_count, sum(emote_count) as emote_count, sum(reaction_count) as reaction_count
+            from (
+            select distinct timestamp, channel_id
+            from channel_totals_breakdown, channel_info
+            ) as c
+            left join channel_totals_breakdown as ct on ct.timestamp = c.timestamp and ct.channel = c.channel_id 
+            group by ct.timestamp, channel
+            order by ct.timestamp, channel;
+
+            CREATE INDEX "ct_timestamp" ON "channel_totals" (
+                "timestamp"	ASC
+            );
+
+
+            drop table if EXISTS channel_user_totals;
+            create table channel_user_totals as
+            select timestamp, user, sum(message_count) as message_count, sum(emote_count) as emote_count, sum(reaction_count) as reaction_count
+            from channel_totals_breakdown as ct 
+            group by timestamp, user
+            order by timestamp, sum(message_count) desc;
+
+            CREATE INDEX "cut_timestamp" ON "channel_user_totals" (
+                "timestamp"	ASC
+            );
+
+
+            drop table if exists emote_totals;
+            create table emote_totals as
+            select timestamp, channel, emote, sum(amount) as amount
+            from emote_totals_breakdown
+            group by timestamp, channel, emote;
+
+            CREATE INDEX "et_timestamp" ON "emote_totals" (
+                "timestamp"	ASC
+            );
+
+            """
+        )
+
         con.close()
         print("Done")
 
