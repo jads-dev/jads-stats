@@ -1,24 +1,39 @@
 <template>
   <v-row>
     <v-col class="text-center" cols="12">
-      <div>
-        <v-btn x-small @click="change_date('start', -30)"> -1 month </v-btn>
-        <v-btn x-small @click="change_date('start', -7)"> -1 week </v-btn>
-        <v-btn x-small @click="change_date('start', -1)"> -1 day </v-btn> Start: {{ start_date }}
-        <v-btn x-small @click="change_date('start', 1)"> +1 day </v-btn>
-        <v-btn x-small @click="change_date('start', 7)"> +1 week </v-btn>
-        <v-btn x-small @click="change_date('start', 30)"> +1 month </v-btn>
-      </div>
-      <div>
-        <v-btn x-small @click="change_date('end', -30)"> -1 month </v-btn>
-        <v-btn x-small @click="change_date('end', -7)"> -1 week </v-btn>
-        <v-btn x-small @click="change_date('end', -1)"> -1 day </v-btn> End: {{ end_date }}
-        <v-btn x-small @click="change_date('end', 1)"> +1 day </v-btn>
-        <v-btn x-small @click="change_date('end', 7)"> +1 week </v-btn>
-        <v-btn x-small @click="change_date('end', 30)"> +1 month </v-btn>
-      </div>
+      <v-row justify="center">
+        <v-menu v-model="start_date_menu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition" offset-y min-width="auto">
+          <template v-slot:activator="{ on, attrs }">
+            <v-text-field
+              style="max-width: 150px"
+              v-model="start_date"
+              label="From"
+              prepend-icon="mdi-calendar"
+              readonly
+              v-bind="attrs"
+              v-on="on"
+            ></v-text-field>
+          </template>
+          <v-date-picker v-model="start_date" @input="start_date_menu = false"></v-date-picker>
+        </v-menu>
+        <v-menu v-model="end_date_menu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition" offset-y min-width="auto">
+          <template v-slot:activator="{ on, attrs }">
+            <v-text-field
+              style="max-width: 150px"
+              v-model="end_date"
+              label="To"
+              prepend-icon="mdi-calendar"
+              readonly
+              v-bind="attrs"
+              v-on="on"
+            ></v-text-field>
+          </template>
+          <v-date-picker v-model="end_date" @input="end_date_menu = false"></v-date-picker>
+        </v-menu>
+      </v-row>
     </v-col>
     <v-col class="text-center" cols="12">
+      <v-progress-linear v-if="is_loading" indeterminate></v-progress-linear>
       <all-channels-bar-chart :chart-data="data_barchart"></all-channels-bar-chart>
     </v-col>
     <v-col class="text-center" cols="12" md="3">
@@ -103,11 +118,18 @@ export default {
     top10_message: [],
     top10_emotes: [],
     top10_reacted: [],
+    start_date_menu: false,
+    end_date_menu: false,
     start_date: "2021-07-01",
     end_date: "2021-08-01",
+    min_date: "",
+    max_date: "",
+    is_loading: false,
   }),
   methods: {
     fetch_data: async function () {
+      this.is_loading = true;
+
       let message_totals = await this.$dbworker.db.query(`
           select timestamp, channel, sum(message_count) as message_count, sum(emote_count) as emote_count, sum(reaction_count) as reaction_count
           from channel_totals 
@@ -202,6 +224,7 @@ export default {
       this.top10_message = top10_message;
       this.top10_emotes = top10_emotes;
       this.top10_reacted = top10_reacted;
+      this.is_loading = false;
     },
 
     change_date: function (date_type, amount) {
@@ -224,6 +247,10 @@ export default {
 
   mounted: async function () {
     this.fetch_data();
+
+    let dates = await this.$dbworker.db.query("select max(timestamp) as max_date, min(timestamp) as min_date from channel_totals");
+    this.min_date = dates[0]["min_date"];
+    this.max_date = dates[0]["max_date"];
   },
 
   watch: {
