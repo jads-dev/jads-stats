@@ -148,7 +148,7 @@ class Bot(discord.Client):
                 cur_time = cur_time_end
 
         # these tables will use less data (faster) when querying from the browser
-        cursor.execute(
+        cursor.executescript(
             """
             drop table if EXISTS channel_totals;
             create table channel_totals as
