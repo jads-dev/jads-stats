@@ -180,6 +180,19 @@ export default {
       this.fetch_data();
     },
   },
+  head() {
+    return {
+      title: "Emotes",
+      meta: [
+        // hid is used as unique identifier. Do not use `vmid` for it as it will not work
+        {
+          hid: "description",
+          name: "description",
+          content: "Stats for JADS emote counts",
+        },
+      ],
+    };
+  },
 };
 </script>
 

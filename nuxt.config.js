@@ -4,8 +4,8 @@ export default {
   ssr: false,
   target: "static",
   head: {
-    titleTemplate: "%s - jads-stats",
-    title: "jads-stats",
+    titleTemplate: "%s - JADS Stats",
+    title: "JADS Stats",
     htmlAttrs: {
       lang: "en"
     },
