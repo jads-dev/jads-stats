@@ -91,3 +91,4 @@ sw.*
 
 # manually added
 setenv.bat
+cache/*

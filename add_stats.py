@@ -1,7 +1,8 @@
 import os
 import re
 import sqlite3
-
+import shelve
+import json
 
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -27,6 +28,7 @@ class Bot(discord.Client):
         guild = self.get_guild(308515582817468420)  # jads
 
         date_start = datetime(2020, 1, 13, 0, 0, 0, 0)
+        # date_start = datetime(2021, 7, 1, 0, 0, 0, 0)
         date_limit = datetime(2021, 8, 1, 0, 0, 0, 0)
 
         emote_pattern = re.compile("<a?:.*?:([0-9]*?)>")
@@ -41,11 +43,12 @@ class Bot(discord.Client):
 
             cursor.execute("select max(timestamp) from channel_totals where channel = ?", (channel.id,))
             result = cursor.fetchone()[0]
-            if result:
-                cur_time = datetime.fromisoformat(result)
-                cur_time = cur_time + timedelta(days=1)
-            else:
-                cur_time = date_start
+            # if result:
+            #     cur_time = datetime.fromisoformat(result)
+            #     cur_time = cur_time + timedelta(days=1)
+            # else:
+            #     cur_time = date_start
+            cur_time = date_start
             while cur_time < date_limit:
                 cur_time_end = cur_time + timedelta(days=1)
 
@@ -53,35 +56,66 @@ class Bot(discord.Client):
 
                 user_data = defaultdict(
                     lambda: {
-                        "messages": 0,
-                        "emotes": 0,
-                        "reactions": 0,
+                        "message_count": 0,
+                        "emote_count": 0,
+                        "reaction_count": 0,
+                        "emotes": defaultdict(int),
                     }
                 )
 
                 usernames = {}
 
-                async for message in channel.history(after=cur_time, before=cur_time_end, limit=None):
-                    aid = message.author.id
-                    user_data[aid]["messages"] += 1
-                    if emote_pattern.search(message.content):
-                        user_data[aid]["emotes"] += 1
-                    if len(message.reactions):
-                        user_data[aid]["reactions"] += 1
+                cache_folder = f"./cache/{channel.id}"
+                os.makedirs(cache_folder, exist_ok=True)
+                cache_path = f"{cache_folder}/{cur_time.strftime('%Y%m%d-%H%M%S')}.json"
 
-                    usernames[aid] = f"{message.author.name}#{message.author.discriminator}"
+                if os.path.exists(cache_path):
+                    with open(cache_path, "r") as f:
+                        messages = json.load(f)
+                else:
+                    messages = []
+                    async for message in channel.history(after=cur_time, before=cur_time_end, limit=None):
+                        messages.append(message)
+                    messages = [
+                        {
+                            "author_id": message.author.id,
+                            "username": f"{message.author.name}#{message.author.discriminator}",
+                            "content": message.content,
+                            "reactions": [reaction.emoji.id if reaction.custom_emoji else reaction.emoji for reaction in message.reactions],
+                        }
+                        for message in messages
+                    ]
+
+                    with open(cache_path, "w") as f:
+                        json.dump(messages, f)
+
+                for message in messages:
+                    aid = message["author_id"]
+                    user_data[aid]["message_count"] += 1
+
+                    emote_ids = emote_pattern.findall(message["content"])
+                    if len(emote_ids):
+                        user_data[aid]["emote_count"] += 1
+                        for emote_id in emote_ids:
+                            user_data[aid]["emotes"][emote_id] += 1
+                    if message["reactions"]:
+                        user_data[aid]["reaction_count"] += 1
+                    usernames[aid] = message["username"]
 
                 time_str = cur_time.date().isoformat()
 
+                # print(user_data)
                 user_data_flat = [
-                    (time_str, channel.id, key, user_data[key]["messages"], user_data[key]["emotes"], user_data[key]["reactions"]) for key in user_data
+                    (time_str, channel.id, key, user_data[key]["message_count"], user_data[key]["emote_count"], user_data[key]["reaction_count"])
+                    for key in user_data
                 ]
-                cursor.executemany(
-                    """INSERT INTO channel_totals (timestamp, channel, user, message_count, emote_count, reaction_count)
-                       VALUES (?,?,?,?,?,?)
-                            """,
-                    user_data_flat,
-                )
+
+                # cursor.executemany(
+                #     """INSERT INTO channel_totals (timestamp, channel, user, message_count, emote_count, reaction_count)
+                #        VALUES (?,?,?,?,?,?)
+                #             """,
+                #     user_data_flat,
+                # )
 
                 usernames_flat = [(key, usernames[key]) for key in usernames]
 
