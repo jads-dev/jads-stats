@@ -2,7 +2,7 @@
   <v-row>
     <v-col class="text-center" cols="12">
       <v-row justify="center">
-        <v-textarea auto-grow :value="query"></v-textarea>
+        <v-textarea auto-grow v-model="query"></v-textarea>
       </v-row>
       <v-row justify="center">
         <v-btn @click="fetch_data()">Run</v-btn>
