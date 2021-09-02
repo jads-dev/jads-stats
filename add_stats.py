@@ -30,7 +30,6 @@ class Bot(discord.Client):
         today = date.today()
 
         date_start = datetime(2020, 1, 13, 0, 0, 0, 0)
-        date_start = datetime(2021, 7, 20, 0, 0, 0, 0)
         date_limit = datetime(2021, 8, 23, 0, 0, 0, 0)
         date_limit = datetime(today.year, today.month, today.day)
 
