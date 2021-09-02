@@ -26,10 +26,11 @@ class Bot(discord.Client):
         print("------")
 
         guild = self.get_guild(308515582817468420)  # jads
-        
+
         today = date.today()
-        
+
         date_start = datetime(2020, 1, 13, 0, 0, 0, 0)
+        date_start = datetime(2021, 7, 20, 0, 0, 0, 0)
         date_limit = datetime(2021, 8, 23, 0, 0, 0, 0)
         date_limit = datetime(today.year, today.month, today.day)
 
@@ -37,7 +38,10 @@ class Bot(discord.Client):
 
         cursor = con.cursor()
 
-        for channel in guild.channels:
+        channels = [channel for channel in guild.channels if channel.category_id != 360768845662781440]
+        channels += [thread for thread in guild.threads]
+
+        for channel in channels:
             if channel.category_id != 360768845662781440:  # main category
                 continue
 
@@ -72,12 +76,13 @@ class Bot(discord.Client):
                     messages = []
                     async for message in channel.history(after=cur_time, before=cur_time_end, limit=None):
                         messages.append(message)
+
                     messages = [
                         {
                             "author_id": message.author.id,
                             "username": f"{message.author.name}#{message.author.discriminator}",
                             "content": message.content,
-                            "reactions": [reaction.emoji.id if reaction.custom_emoji else reaction.emoji for reaction in message.reactions],
+                            "reactions": [reaction.emoji if type(reaction.emoji) is str else reaction.emoji.id for reaction in message.reactions],
                         }
                         for message in messages
                     ]
@@ -136,8 +141,7 @@ class Bot(discord.Client):
                             """,
                     usernames_flat,
                 )
-               
-                
+
                 emote_names_flat = [(key, emote_names[key]) for key in emote_names]
                 cursor.executemany(
                     """insert into emote_info (emote_id, emote_name)
@@ -204,7 +208,7 @@ class Bot(discord.Client):
 
 def run():
     client = Bot(intents=intents)
-    client.run(os.environ["discord_token"], bot=True)
+    client.run(os.environ["discord_token"])
 
 
 if __name__ == "__main__":
