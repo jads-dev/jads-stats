@@ -1,7 +1,6 @@
 @ECHO OFF
 
-yarn generate
-
+call yarn generate
 SETLOCAL
 SET "sourcedir=..\jads-stats-gh-pages"
 SET "keepdir=.git"
@@ -13,5 +12,6 @@ FOR %%a IN ("%sourcedir%\*") DO DEL "%%a"
 xcopy .\dist ..\jads-stats-gh-pages /s /e
 
 cd ..\jads-stats-gh-pages
-git commit -m 'update'
+git add .
+git commit -a -m update
 git push
