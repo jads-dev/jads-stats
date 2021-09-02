@@ -32,7 +32,7 @@
       <all-channel-doughnut-chart :chart-data="data_doughnut"></all-channel-doughnut-chart>
     </v-col>
     <v-col class="text-center" cols="12" md="3">
-      Top 10 most messages
+      Top 10 most messages by users with an 'a' in their username but not a 'i'
       <v-simple-table dense>
         <thead>
           <tr>
@@ -49,7 +49,7 @@
       </v-simple-table>
     </v-col>
     <v-col class="text-center" cols="12" md="3">
-      Top 10 most messages with emotes
+      Top 10 most messages with emotes, but the user must have a 69 in their discriminator
       <v-simple-table dense>
         <thead>
           <tr>
@@ -66,7 +66,7 @@
       </v-simple-table>
     </v-col>
     <v-col class="text-center" cols="12" md="3">
-      Top 10 most reacted to
+      Top 10 most messages reacted to, but don't have more than 420 messages reacted to
       <v-simple-table dense>
         <thead>
           <tr>
@@ -112,8 +112,8 @@ export default {
     top10_reacted: [],
     start_date_menu: false,
     end_date_menu: false,
-    default_start_date: "2021-07-01",
-    default_end_date: "2021-08-01",
+    default_start_date: "2021-08-01",
+    default_end_date: "2021-09-01",
     min_date: "",
     max_date: "",
     is_loading: false,
@@ -194,6 +194,7 @@ export default {
           from channel_user_totals as ct 
           left join user_info as ui on ui.user_id = ct.user
           where timestamp between '${this.start_date}' and '${this.end_date}'
+          and username like '%a%' and username not like '%i%'
           group by user, username
           order by sum(message_count) desc
           limit 10
@@ -204,6 +205,7 @@ export default {
           from channel_user_totals as ct 
           left join user_info as ui on ui.user_id = ct.user
           where timestamp between '${this.start_date}' and '${this.end_date}'
+          and username like '%69%'
           group by user, username
           order by sum(emote_count) desc
           limit 10
@@ -215,6 +217,7 @@ export default {
           left join user_info as ui on ui.user_id = ct.user
           where timestamp between '${this.start_date}' and '${this.end_date}'
           group by user, username
+          having sum(reaction_count) < 420
           order by sum(reaction_count) desc
           limit 10
     `);

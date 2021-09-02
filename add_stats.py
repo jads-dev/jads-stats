@@ -5,7 +5,7 @@ import shelve
 import json
 
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 
 import discord
@@ -26,11 +26,14 @@ class Bot(discord.Client):
         print("------")
 
         guild = self.get_guild(308515582817468420)  # jads
-
+        
+        today = date.today()
+        
         date_start = datetime(2020, 1, 13, 0, 0, 0, 0)
-        date_limit = datetime(2021, 8, 1, 0, 0, 0, 0)
+        date_limit = datetime(2021, 8, 23, 0, 0, 0, 0)
+        date_limit = datetime(today.year, today.month, today.day)
 
-        emote_pattern = re.compile("<a?:(.*?):([0-9]*?)>")
+        emote_pattern = re.compile("<a?:(.*?):([0-9]+?)>")
 
         cursor = con.cursor()
 
@@ -133,6 +136,8 @@ class Bot(discord.Client):
                             """,
                     usernames_flat,
                 )
+               
+                
                 emote_names_flat = [(key, emote_names[key]) for key in emote_names]
                 cursor.executemany(
                     """insert into emote_info (emote_id, emote_name)
