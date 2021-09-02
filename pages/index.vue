@@ -129,12 +129,12 @@ export default {
             where timestamp between '${this.start_date}' and '${this.end_date}'
           )
 
-          select ct.timestamp, channel, sum(message_count) as message_count, sum(emote_count) as emote_count, sum(reaction_count) as reaction_count
+          select c.timestamp, channel_id as channel, ifnull(sum(message_count),0) as message_count, ifnull(sum(emote_count),0) as emote_count, ifnull(sum(reaction_count),0) as reaction_count
           from c
           left join channel_totals as ct on ct.timestamp = c.timestamp and ct.channel = c.channel_id 
-          where ct.timestamp between '${this.start_date}' and '${this.end_date}'
-          group by ct.timestamp, channel
-          order by ct.timestamp, channel
+          where c.timestamp between '${this.start_date}' and '${this.end_date}'
+          group by c.timestamp, channel_id
+          order by c.timestamp, channel_id
     `);
 
       let channel_info_array = await this.$dbworker.db.query(`select * from channel_info`);
