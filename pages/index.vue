@@ -32,7 +32,7 @@
       <all-channel-doughnut-chart :chart-data="data_doughnut"></all-channel-doughnut-chart>
     </v-col>
     <v-col class="text-center" cols="12" md="3">
-      Top 10 most messages by users with an 'a' in their username but not a 'i'
+      Top 10 most messages
       <v-simple-table dense>
         <thead>
           <tr>
@@ -49,7 +49,7 @@
       </v-simple-table>
     </v-col>
     <v-col class="text-center" cols="12" md="3">
-      Top 10 most messages with emotes, but the user must have a 69 in their discriminator
+      Top 10 most messages with emotes
       <v-simple-table dense>
         <thead>
           <tr>
@@ -59,14 +59,14 @@
         </thead>
         <tbody>
           <tr v-for="user in top10_emotes" :key="`t10m_${user.user}`">
-            <td class="text-right">{{ user.emote_count }}</td>
+            <td class="text-right">{{ user.emote_percent }}</td>
             <td class="text-left">{{ user.username }}</td>
           </tr>
         </tbody>
       </v-simple-table>
     </v-col>
     <v-col class="text-center" cols="12" md="3">
-      Top 10 most messages reacted to, but don't have more than 420 messages reacted to
+      Top 10 most messages reacted to
       <v-simple-table dense>
         <thead>
           <tr>
@@ -76,7 +76,7 @@
         </thead>
         <tbody>
           <tr v-for="user in top10_reacted" :key="`t10m_${user.user}`">
-            <td class="text-right">{{ user.reaction_count }}</td>
+            <td class="text-right">{{ user.react_percent }}</td>
             <td class="text-left">{{ user.username }}</td>
           </tr>
         </tbody>
@@ -112,8 +112,8 @@ export default {
     top10_reacted: [],
     start_date_menu: false,
     end_date_menu: false,
-    default_start_date: "2021-08-01",
-    default_end_date: "2021-09-01",
+    default_start_date: "2021-09-01",
+    default_end_date: "2021-10-01",
     min_date: "",
     max_date: "",
     is_loading: false,
@@ -194,31 +194,30 @@ export default {
           from channel_user_totals as ct 
           left join user_info as ui on ui.user_id = ct.user
           where timestamp between '${this.start_date}' and '${this.end_date}'
-          and username like '%a%' and username not like '%i%'
           group by user, username
           order by sum(message_count) desc
           limit 10
     `);
 
       let top10_emotes = await this.$dbworker.db.query(`
-          select user, username, sum(emote_count) as emote_count
+          select user, username, cast(round(cast(sum(emote_count) as real) / sum(message_count), 3) * 100 as text) || '%' as emote_percent
           from channel_user_totals as ct 
           left join user_info as ui on ui.user_id = ct.user
           where timestamp between '${this.start_date}' and '${this.end_date}'
-          and username like '%69%'
           group by user, username
-          order by sum(emote_count) desc
+          having sum(message_count) > 100
+          order by cast(sum(emote_count) as real) / sum(message_count) desc
           limit 10
     `);
 
       let top10_reacted = await this.$dbworker.db.query(`
-          select user, username, sum(reaction_count) as reaction_count
+          select user, username, cast(round(cast(sum(reaction_count) as real) / sum(message_count), 3) * 100 as text) || '%' as react_percent
           from channel_user_totals as ct 
           left join user_info as ui on ui.user_id = ct.user
           where timestamp between '${this.start_date}' and '${this.end_date}'
           group by user, username
-          having sum(reaction_count) < 420
-          order by sum(reaction_count) desc
+          having sum(message_count) > 100
+          order by cast(sum(reaction_count) as real) / sum(message_count) desc
           limit 10
     `);
 
