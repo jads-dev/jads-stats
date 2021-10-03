@@ -29,21 +29,25 @@ class Bot(discord.Client):
 
         today = date.today()
 
-        date_start = datetime(2020, 1, 13, 0, 0, 0, 0)
-        date_limit = datetime(2021, 8, 23, 0, 0, 0, 0)
-        date_limit = datetime(today.year, today.month, today.day)
+        # date_start = datetime(2020, 1, 13, 0, 0, 0, 0)
+        date_start = datetime(2021, 9, 1, 0, 0, 0, 0)
+        date_limit = datetime(2021, 10, 1, 0, 0, 0, 0)
+        # date_limit = datetime(today.year, today.month, today.day)
 
         emote_pattern = re.compile("<a?:(.*?):([0-9]+?)>")
 
         cursor = con.cursor()
 
-        channels = [channel for channel in guild.channels if channel.category_id != 360768845662781440]
+        dd = guild.get_channel(666328861985865749)
+        archived_thread_ids = [
+            888659721651904573, # deltarune spoiler chat
+        ]
+
+        channels = [channel for channel in guild.channels if channel.category_id == 360768845662781440]
         channels += [thread for thread in guild.threads]
+        channels += [thread async for thread in dd.archived_threads() if thread.id in archived_thread_ids]
 
         for channel in channels:
-            if channel.category_id != 360768845662781440:  # main category
-                continue
-
             print(channel.id, channel)
 
             cur_time = date_start
