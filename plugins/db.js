@@ -1,14 +1,16 @@
 import Vue from "vue";
 import { createDbWorker } from "sql.js-httpvfs";
 
+
 export default async ({ app, store }, inject) => {
+  let data = require("/static/data.json")
   let worker = await createDbWorker(
     [
       {
         from: "inline",
         config: {
           serverMode: "full",
-          url: "./stats-2109.db",
+          url: data.filename,
           requestChunkSize: 4096
         }
       }

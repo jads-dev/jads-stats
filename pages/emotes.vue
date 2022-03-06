@@ -35,6 +35,7 @@
 
 <script>
 import EmotesBarChart from "../components/EmotesBarChart.vue";
+import data from "/static/data.json"
 
 function parseDate(date) {
   const parsed = Date.parse(date);
@@ -44,6 +45,8 @@ function parseDate(date) {
 
   return Date.parse(date.replace(/-/g, "/").replace(/[a-z]+/gi, " "));
 }
+
+
 
 export default {
   components: { EmotesBarChart },
@@ -57,8 +60,8 @@ export default {
     top10_reacted: [],
     start_date_menu: false,
     end_date_menu: false,
-    default_start_date: "2021-09-01",
-    default_end_date: "2021-10-01",
+    default_start_date: data.start_date,
+    default_end_date: data.end_date,
     min_date: "",
     max_date: "",
     is_loading: false,

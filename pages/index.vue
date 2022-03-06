@@ -91,6 +91,8 @@
 import AllChannelDoughnutChart from "~/components/AllChannelDoughnutChart.vue";
 import AllChannelsBarChart from "~/components/AllChannelsBarChart.vue";
 
+import data from "/static/data.json"
+
 function parseDate(date) {
   const parsed = Date.parse(date);
   if (!isNaN(parsed)) {
@@ -112,8 +114,8 @@ export default {
     top10_reacted: [],
     start_date_menu: false,
     end_date_menu: false,
-    default_start_date: "2021-09-01",
-    default_end_date: "2021-10-01",
+    default_start_date: data.start_date,
+    default_end_date: data.end_date,
     min_date: "",
     max_date: "",
     is_loading: false,

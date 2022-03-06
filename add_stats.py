@@ -2,6 +2,7 @@ import os
 import re
 import sqlite3
 import shelve
+import shutil
 import json
 
 from collections import defaultdict
@@ -30,9 +31,9 @@ class Bot(discord.Client):
         today = date.today()
 
         # date_start = datetime(2020, 1, 13, 0, 0, 0, 0)
-        date_start = datetime(2021, 9, 1, 0, 0, 0, 0)
-        date_limit = datetime(2021, 10, 1, 0, 0, 0, 0)
-        # date_limit = datetime(today.year, today.month, today.day)
+        date_start = datetime(2022, 3, 1, 0, 0, 0, 0)
+        # date_limit = datetime(2021, 10, 1, 0, 0, 0, 0)
+        date_limit = datetime(today.year, today.month, today.day)
 
         emote_pattern = re.compile("<a?:(.*?):([0-9]+?)>")
 
@@ -204,6 +205,21 @@ class Bot(discord.Client):
         )
 
         con.close()
+
+
+        end_date = date_limit - timedelta(days=1)
+        start_date = date_limit - timedelta(days=31)
+        filename = f"stats-{end_date.year}{end_date.month:02}{end_date.day:02}.db"
+        shutil.copy("static/stats.db", f"static/{filename}")
+        with open ("static/data.json", 'w') as f:
+            data = {
+                "start_date": f"{start_date.year}-{start_date.month:02}-{start_date.day:02}",
+                "end_date": f"{end_date.year}-{end_date.month:02}-{end_date.day:02}",
+                "filename": f"./{filename}"
+            }
+            json.dump(data, f)
+        
+
         print("Done")
 
         await self.close()
