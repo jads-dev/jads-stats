@@ -27,6 +27,16 @@
             <v-list-item-title>Emotes</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+
+        <v-list-item link :to="{ path: '/markov_search' }">
+          <v-list-item-icon>
+            <img src="https://cdn.discordapp.com/avatars/687854633443655814/d220bac5e82f007ea85ea6e1c38911fa.png?size=128" />
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>Markov Bot</v-list-item-title>
+            <v-list-item-title>(April Fools 2022)</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
     <v-main>
