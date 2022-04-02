@@ -21,7 +21,7 @@
 
         <v-list-item link :to="{ path: '/emotes', query: { start_date: $route.params.start_date, end_date: $route.params.end_date } }">
           <v-list-item-icon>
-            <img src="https://cdn.discordapp.com/emojis/318166088863055872.png?v=1" />
+            <img src="https://cdn.discordapp.com/emojis/318166088863055872.png?size=24" />
           </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>Emotes</v-list-item-title>
@@ -30,7 +30,7 @@
 
         <v-list-item link :to="{ path: '/markov_search' }">
           <v-list-item-icon>
-            <img src="https://cdn.discordapp.com/avatars/687854633443655814/d220bac5e82f007ea85ea6e1c38911fa.png?size=128" />
+            <img src="https://cdn.discordapp.com/avatars/687854633443655814/d220bac5e82f007ea85ea6e1c38911fa.png?size=24" />
           </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>Markov Bot</v-list-item-title>

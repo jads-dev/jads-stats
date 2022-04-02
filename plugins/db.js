@@ -1,9 +1,8 @@
 import Vue from "vue";
 import { createDbWorker } from "sql.js-httpvfs";
 
-
 export default async ({ app, store }, inject) => {
-  let data = require("/static/data.json")
+  let data = require("/static/data.json");
   let worker = await createDbWorker(
     [
       {
