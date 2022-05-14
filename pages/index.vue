@@ -49,7 +49,7 @@
       </v-simple-table>
     </v-col>
     <v-col class="text-center" cols="12" md="3">
-      Top 10 most messages with emotes
+      Top 10 most average poster
       <v-simple-table dense>
         <thead>
           <tr>
@@ -58,8 +58,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="user in top10_emotes" :key="`t10m_${user.user}`">
-            <td class="text-right">{{ user.emote_percent }}</td>
+          <tr v-for="user in top10_average_poster" :key="`t10m_${user.user}`">
+            <td class="text-right">{{ user.messages }}</td>
             <td class="text-left">{{ user.username }}</td>
           </tr>
         </tbody>
@@ -110,7 +110,7 @@ export default {
     message_bar: {},
     message_data: [],
     top10_message: [],
-    top10_emotes: [],
+    top10_average_poster: [],
     top10_reacted: [],
     start_date_menu: false,
     end_date_menu: false,
@@ -201,14 +201,19 @@ export default {
           limit 10
     `);
 
-      let top10_emotes = await this.$dbworker.db.query(`
-          select user, username, cast(round(cast(sum(emote_count) as real) / sum(message_count), 3) * 100 as text) || '%' as emote_percent
-          from channel_user_totals as ct 
+      let top10_average_poster = await this.$dbworker.db.query(`
+          with avg as ( select sum(message_count) / count(distinct user) as avg
+            from channel_user_totals as ct 
+            left join user_info as ui on ui.user_id = ct.user
+            where timestamp between '${this.start_date}' and '${this.end_date}'
+          )
+
+          select user, username, sum(message_count) as  messages
+          from channel_user_totals as ct, avg
           left join user_info as ui on ui.user_id = ct.user
           where timestamp between '${this.start_date}' and '${this.end_date}'
           group by user, username
-          having sum(message_count) > 100
-          order by cast(sum(emote_count) as real) / sum(message_count) desc
+          order by abs(avg.avg - sum(message_count)) asc
           limit 10
     `);
 
@@ -224,7 +229,7 @@ export default {
     `);
 
       this.top10_message = top10_message;
-      this.top10_emotes = top10_emotes;
+      this.top10_average_poster = top10_average_poster;
       this.top10_reacted = top10_reacted;
       this.is_loading = false;
     },
