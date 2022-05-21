@@ -223,7 +223,7 @@ export default {
           left join user_info as ui on ui.user_id = ct.user
           where timestamp between '${this.start_date}' and '${this.end_date}'
           group by user, username
-          having sum(message_count) > 100
+          having sum(reaction_count) > 100
           order by cast(sum(reaction_count) as real) / sum(message_count) desc
           limit 10
     `);
