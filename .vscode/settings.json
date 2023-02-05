@@ -1,0 +1,27 @@
+{
+    "python.pythonPath": "C:\\Python39\\python.exe",
+    "files.exclude": {
+        "**/__pycache__": true
+    },
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+        "--line-length",
+        "160",
+    ],
+    "python.linting.flake8Args": [
+        "--ignore=E203,E501,W291,W292,W293",
+    ],
+    "git.autofetch": true,
+    "git.postCommitCommand": "sync",
+    "python.linting.pylintEnabled": false,
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "prettier.printWidth": 160,
+    "editor.minimap.maxColumn": 160,
+    "vetur.format.defaultFormatterOptions": {
+        "prettier": {
+          // Prettier option here
+          "printWidth": 160
+        }
+      }
+}

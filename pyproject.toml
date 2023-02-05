@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "jads-stats"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+"discord.py" = "^2.0.1"
+regex = "^2022.9.13"
+tqdm = "^4.64.1"
+
+[tool.poetry.dev-dependencies]
+black = {version = "^21.7b0", allow-prereleases = true}
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 160
