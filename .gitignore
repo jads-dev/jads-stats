@@ -94,4 +94,4 @@ setenv.bat
 cache/*
 cache_old/*
 .history
-static/stats.db
+stats.db

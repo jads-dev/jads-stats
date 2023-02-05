@@ -16,7 +16,7 @@ intents = discord.Intents.default()
 intents.members = True
 intents.reactions = True
 
-con = sqlite3.connect("static/stats.db")
+con = sqlite3.connect("stats.db")
 
 
 class Bot(discord.Client):
@@ -244,7 +244,7 @@ class Bot(discord.Client):
 
         dir_name = f"stats-{end_date.year}{end_date.month:02}{end_date.day:02}"
         os.makedirs(f"./static/{dir_name}")
-        os.system(f"bash create_db.sh static/stats.db static/{dir_name}/")
+        os.system(f"bash create_db.sh stats.db static/{dir_name}/")
         with open("static/data.json", "w") as f:
             data = {
                 "start_date": f"{start_date.year}-{start_date.month:02}-{start_date.day:02}",
