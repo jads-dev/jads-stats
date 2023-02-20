@@ -5,6 +5,7 @@ import shelve
 import shutil
 import json
 import logging
+import glob
 
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
@@ -19,10 +20,34 @@ intents.reactions = True
 con = sqlite3.connect("stats.db")
 
 
+def split_db(file, dir):
+    size = os.path.getsize(file)
+    server_chunk_size = 10 * 1024 * 1024
+    suffix_length = 3
+
+    map(os.remove, glob.glob(f"{dir}/db.sqlite3*"))
+    split_command = f'split "{file}" --bytes={server_chunk_size} "{dir}/db.sqlite3." --suffix-length={suffix_length} --numeric-suffixes'
+    os.system(split_command)
+
+    request_chunk_size = os.popen(f'sqlite3 "{file}" "pragma page_size"').read()
+
+    config = {
+        "serverMode": "chunked",
+        "requestChunkSize": request_chunk_size,
+        "databaseLengthBytes": size,
+        "serverChunkSize": server_chunk_size,
+        "urlPrefix": "db.sqlite3.",
+        "suffixLength": suffix_length,
+    }
+
+    with open(f"{dir}/config.json", "w") as f:
+        json.dump(config, f)
+
+
 class Bot(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
     async def get_channel_messages(self, channel, after, before):
         messages = []
         _after = after
@@ -49,7 +74,7 @@ class Bot(discord.Client):
 
         # date_start = datetime(2020, 1, 13, 0, 0, 0, 0)
         date_start = datetime(2020, 1, 13, 0, 0, 0, 0, tzinfo=timezone.utc)
-        date_start = datetime(2022, 11, 1, 0, 0, 0, 0, tzinfo=timezone.utc)
+        date_start = datetime(2023, 2, 19, 0, 0, 0, 0, tzinfo=timezone.utc)
         # date_limit = datetime(2021, 10, 1, 0, 0, 0, 0)
         date_limit = datetime(today.year, today.month, today.day, tzinfo=timezone.utc)
 
@@ -60,11 +85,11 @@ class Bot(discord.Client):
         dd = guild.get_channel(666328861985865749)
         archived_thread_ids = [
             888659721651904573,  # deltarune spoiler chat
-            1039499797729648680, # gow ragnarok
+            1039499797729648680,  # gow ragnarok
         ]
         extra_channels = [
             974341120198844467,  # zero escape spoiler channel
-            1052997665610285137, # lis spoiler channel
+            1052997665610285137,  # lis spoiler channel
         ]
 
         974341120198844467
@@ -111,7 +136,10 @@ class Bot(discord.Client):
                             "author_id": message.author.id,
                             "username": f"{message.author.name}#{message.author.discriminator}",
                             "content": message.content,
-                            "reactions": [reaction.emoji if type(reaction.emoji) is str else reaction.emoji.id for reaction in message.reactions],
+                            "reactions": [
+                                reaction.emoji if type(reaction.emoji) is str else reaction.emoji.id
+                                for reaction in message.reactions
+                            ],
                             "reactions_detailed": [
                                 {
                                     "reaction": reaction.emoji if type(reaction.emoji) is str else reaction.emoji.id,
@@ -145,7 +173,14 @@ class Bot(discord.Client):
                 time_str = cur_time.date().isoformat()
 
                 user_data_flat = [
-                    (time_str, channel.id, key, user_data[key]["message_count"], user_data[key]["emote_count"], user_data[key]["reaction_count"])
+                    (
+                        time_str,
+                        channel.id,
+                        key,
+                        user_data[key]["message_count"],
+                        user_data[key]["emote_count"],
+                        user_data[key]["reaction_count"],
+                    )
                     for key in user_data
                 ]
 
@@ -243,8 +278,9 @@ class Bot(discord.Client):
         start_date = date_limit - timedelta(days=31)
 
         dir_name = f"stats-{end_date.year}{end_date.month:02}{end_date.day:02}"
-        os.makedirs(f"./static/{dir_name}")
-        os.system(f"bash create_db.sh stats.db static/{dir_name}/")
+        os.makedirs(f"./static/{dir_name}", exist_ok=True)
+        # os.system(f"bash create_db.sh stats.db static/{dir_name}/")
+        split_db("stats.db", f"static/{dir_name}/")
         with open("static/data.json", "w") as f:
             data = {
                 "start_date": f"{start_date.year}-{start_date.month:02}-{start_date.day:02}",
