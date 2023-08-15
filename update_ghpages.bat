@@ -1,7 +1,8 @@
-@ECHO OFF
+rem @ECHO OFF
 
 rd /s /q dist
-call yarn generate
+call node-v16.19.0-win-x64\nodevars.bat
+call npm run generate
 cd dist
 git init -b gh-pages
 git add .

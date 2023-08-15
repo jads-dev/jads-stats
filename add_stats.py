@@ -74,7 +74,7 @@ class Bot(discord.Client):
 
         # date_start = datetime(2020, 1, 13, 0, 0, 0, 0)
         date_start = datetime(2020, 1, 13, 0, 0, 0, 0, tzinfo=timezone.utc)
-        date_start = datetime(2023, 2, 19, 0, 0, 0, 0, tzinfo=timezone.utc)
+        date_start = datetime(2023, 7, 1, 0, 0, 0, 0, tzinfo=timezone.utc)
         # date_limit = datetime(2021, 10, 1, 0, 0, 0, 0)
         date_limit = datetime(today.year, today.month, today.day, tzinfo=timezone.utc)
 

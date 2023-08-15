@@ -95,3 +95,4 @@ cache/*
 cache_old/*
 .history
 stats.db
+node-v16.19.0-win-x64
